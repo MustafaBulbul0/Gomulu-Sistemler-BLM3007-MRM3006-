@@ -6,82 +6,94 @@ gittikçe ortadaki LED’lerden solda kalan ve motorun hızıyla orantılı olac
 LED’ler de yanacak. Benzer şekilde pot sağa doğru gittikçe ortadaki LED’lerden sağda kalan ve
 motorun hızıyla orantılı olacak şekilde daha sağdaki LED’ler de yanacak.*/
 
-int atop = 255 / 490;
-
 void pinReset();
-void setup() {
-  pinMode (31, OUTPUT);
-  pinMode (33, OUTPUT);
-  pinMode (35, OUTPUT);
-  pinMode (37, OUTPUT);
-  pinMode (39, OUTPUT);
-  pinMode (41, OUTPUT);
-  pinMode (43, OUTPUT);
-  pinMode (45, OUTPUT);
+void turnLeft(int pot);
+void turnRight(int pot);
+
+void setup()
+{
+  int i = 31;
+
+  while (i <= 45)
+  {
+    pinMode (i, OUTPUT);
+    i += 2;
+  }
+
+  pinMode (8, OUTPUT);
+  pinMode (9, OUTPUT);
+  pinMode (10, OUTPUT);
 
   pinMode (A0, INPUT);
-  pinMode (10, OUTPUT);
-  pinMode (9, OUTPUT);
 
-  Serial.begin(115200);
+  Serial.begin(9600);
 }
 
 void loop()
 {
-  int speed;
-  int i;
-  int j; 
   int pot = analogRead(A0);
 
   Serial.println(pot);
 
-  if (pot >= 0 && pot < 490)
+  if (0 <= pot && pot < 490)
+    turnRight(pot);
+  else if (534 < pot && pot <= 1023)
+    turnLeft(pot);
+  else
   {
-    speed = 255 - (pot * atop);
-    analogWrite(10, speed);
-    pinReset();
-    i = speed / 85 + 1;
-    j = 0;
-    while (i != 0)
-    {
-      digitalWrite(41 + j, 1);
-      j+=2;
-      i--;
-    }
+      pinReset();
+      digitalWrite(39, 1);
+      digitalWrite(37, 1);
   }
-  else if (pot >= 490 && pot <= 534)
-  {
-    speed = 0;
-    analogWrite(10, speed);
-    pinReset();
-    digitalWrite(37, 1);
-    digitalWrite(39, 1);
-  }
-  else if (pot > 534 && pot < 1024)
-  {
-    speed = (pot - 534) * atop;
-    analogWrite(9, speed);
-    pinReset();
-    i = speed / 85 + 1;
-    j = 0;
-    while (i != 0)
-    {
-      digitalWrite(35 - j, 1);
-      j+=2;
-      i--;
-    }
-  }
+  delay(10);
+}
 
+void turnRight(int pot)
+{
+  int speed = map(pot, 0, 489, 255, 0);
+  int first = 35;
+  int end = 31 + (pot / 80);
+
+  pinReset();
+
+  digitalWrite(8, 1);
+  digitalWrite(9, 0);
+  analogWrite(10, speed);
+
+  while (first >= end)
+  {
+    digitalWrite(first, 1);
+    first -= 2;
+  }
+}
+
+void turnLeft(int pot)
+{
+  int n_pot = (pot - 534);
+  int first = 41;
+  int end = 41 + 2 * (n_pot / 160);
+  int speed = map(pot, 535, 1023, 0, 255);
+
+  pinReset();
+
+  digitalWrite(8, 0);
+  digitalWrite(9, 1);
+  analogWrite(10, speed);
+  
+  while (first <= end)
+  {
+    digitalWrite(first, 1);
+    first += 2;
+  }
 }
 
 void pinReset()
 {
-  digitalWrite (31, 0);
-  digitalWrite (33, 0);
-  digitalWrite (35, 0);
-  digitalWrite (37, 0);
-  digitalWrite (39, 0);
-  digitalWrite (41, 0);
-  digitalWrite (43, 0);
-  digitalWrite (45, 0);
+  int i = 31;
+
+  while (i <= 45)
+  {
+    digitalWrite (i, 0);
+    i += 2;
+  }
 }
